@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MediSync - Ubah Password</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #1E5EFF 0%, #1546B0 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+        .container {
+            background: white;
+            border-radius: 20px;
+            padding: 40px 30px;
+            max-width: 400px;
+            width: 100%;
+            text-align: center;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+        }
+        .icon {
+            width: 80px; height: 80px;
+            background: #EAF2FF;
+            border-radius: 50%;
+            display: flex; align-items: center; justify-content: center;
+            margin: 0 auto 20px;
+        }
+        .icon svg { width: 40px; height: 40px; fill: #1E5EFF; }
+        h1 { font-size: 22px; color: #1A1A2E; margin-bottom: 10px; }
+        p { font-size: 14px; color: #6B7280; margin-bottom: 24px; line-height: 1.5; }
+        .btn {
+            display: inline-block;
+            background: #1E5EFF;
+            color: white;
+            padding: 14px 32px;
+            border-radius: 12px;
+            text-decoration: none;
+            font-weight: 600;
+            font-size: 16px;
+        }
+        .btn:hover { background: #1546B0; }
+        .error { color: #EF4444; font-size: 14px; margin-top: 16px; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="icon">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+                <path d="M18 8h-1V6c0-2.76-2.24-5-5-5S7 3.24 7 6v2H6c-1.1 0-2 .9-2 2v10c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V10c0-1.1-.9-2-2-2zm-6 9c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2zm3.1-9H8.9V6c0-1.71 1.39-3.1 3.1-3.1 1.71 0 3.1 1.39 3.1 3.1v2z"/>
+            </svg>
+        </div>
+        <h1>Ubah Password</h1>
+        <p id="msg">Kamu akan diarahkan ke aplikasi MediSync untuk mengubah password kamu.</p>
+        <div id="error" class="error" style="display:none"></div>
+        <a href="#" class="btn" id="btn" onclick="openApp()">Buka Aplikasi</a>
+    </div>
+
+    <script>
+        function getAppUrl() {
+            var params = new URLSearchParams(window.location.search);
+            var oobCode = params.get('oobCode');
+            var mode = params.get('mode');
+            if (!oobCode || mode !== 'resetPassword') return null;
+            return 'medisync://change-password?oobCode=' + encodeURIComponent(oobCode);
+        }
+
+        function openApp() {
+            var appUrl = getAppUrl();
+            if (!appUrl) {
+                document.getElementById('msg').style.display = 'none';
+                document.getElementById('btn').style.display = 'none';
+                document.getElementById('error').style.display = 'block';
+                document.getElementById('error').textContent = 'Link tidak valid atau sudah kedaluwarsa.';
+                return;
+            }
+            window.location.href = appUrl;
+        }
+
+        // Auto-open on load
+        window.onload = function() {
+            if (getAppUrl()) {
+                openApp();
+            }
+        };
+    </script>
+</body>
+</html>

@@ -1,0 +1,47 @@
+{
+  "project_info": {
+    "project_number": "64801931635",
+    "project_id": "medisync-f44b1",
+    "storage_bucket": "medisync-f44b1.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:64801931635:android:496795dde4ec55e24e8506",
+        "android_client_info": {
+          "package_name": "com.meditech.medisync"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "64801931635-bv5dc9fk6j1v259ouhodespuvom2qop2.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.meditech.medisync",
+            "certificate_hash": "4ba1285dfb3d125e1201d77723d93821a968d5ed"
+          }
+        },
+        {
+          "client_id": "64801931635-12pirsgpgciji3vcfmuva1aimvhenbr4.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBFNEP0IaaZM1TpQzyIUE0ImK1_VWJ5kRE"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "64801931635-12pirsgpgciji3vcfmuva1aimvhenbr4.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
