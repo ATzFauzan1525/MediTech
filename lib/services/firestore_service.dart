@@ -101,11 +101,11 @@ class FirestoreService {
       final query = await _firestore
           .collection(FirebaseConfig.healthRecordsCollection)
           .where('userId', isEqualTo: uid)
-          .orderBy('date', descending: true)
           .get();
       final records = query.docs
           .map((doc) => HealthRecord.fromFirestore(doc))
           .toList();
+      records.sort((a, b) => b.date.compareTo(a.date));
       return records.take(limit).toList();
     } catch (_) {}
     return await _local.getHealthRecords(uid, limit: limit);

@@ -1,5 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:share_plus/share_plus.dart';
+import 'package:screenshot/screenshot.dart';
+import 'package:path_provider/path_provider.dart';
+import 'dart:io';
 import '../providers/auth_provider.dart';
 import '../providers/health_provider.dart';
 import '../models/health_record_model.dart';
@@ -15,6 +19,7 @@ class DashboardScreen extends StatefulWidget {
 
 class _DashboardScreenState extends State<DashboardScreen> {
   String? _loadedUid;
+  final ScreenshotController _screenshotController = ScreenshotController();
 
   void _loadHealthDataIfNeeded() {
     final auth = context.read<AuthProvider>();
@@ -49,9 +54,15 @@ class _DashboardScreenState extends State<DashboardScreen> {
       body: Consumer2<AuthProvider, HealthProvider>(
         builder: (context, auth, health, _) {
           final user = auth.userModel;
-          final record = health.todayRecord ?? health.latestRecord;
-          final score = record?.totalScore ?? health.todayScore;
-          final label = record?.healthLabel ?? health.todayLabel;
+          final now = DateTime.now();
+          final todayRecord = health.todayRecord;
+          final latestIsToday = health.latestRecord != null &&
+              health.latestRecord!.date.year == now.year &&
+              health.latestRecord!.date.month == now.month &&
+              health.latestRecord!.date.day == now.day;
+          final record = todayRecord ?? (latestIsToday ? health.latestRecord : null);
+          final score = record?.totalScore ?? 0;
+          final label = record?.healthLabel ?? 'No Data';
 
           final recommendations = health.getRecommendations(
             age: user?.age,
@@ -155,13 +166,26 @@ class _DashboardScreenState extends State<DashboardScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text(
-            'Hasil Hari Ini',
-            style: TextStyle(
-              fontSize: 24,
-              fontWeight: FontWeight.bold,
-              color: AppColors.white,
-            ),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              const Text(
+                'Hasil Hari Ini',
+                style: TextStyle(
+                  fontSize: 24,
+                  fontWeight: FontWeight.bold,
+                  color: AppColors.white,
+                ),
+              ),
+              if (record != null)
+                IconButton(
+                  onPressed: () => _shareHealthScore(score, label, record),
+                  icon: const Icon(Icons.share, color: AppColors.white),
+                  style: IconButton.styleFrom(
+                    backgroundColor: AppColors.white.withValues(alpha: 0.2),
+                  ),
+                ),
+            ],
           ),
           const SizedBox(height: 4),
           Text(
@@ -251,6 +275,233 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 ),
               ),
             ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _shareHealthScore(int score, String label, dynamic record) async {
+    final auth = context.read<AuthProvider>();
+    final userName = auth.userModel?.name ?? 'User';
+    final sleepHours = record?.sleepHours.toStringAsFixed(1) ?? '0';
+    final activityType = record?.activityType ?? 'Tidak Ada';
+    final activityDuration = record?.activityDuration ?? 0;
+    final waterIntake = record?.waterIntake ?? 0;
+    final sleepScore = record?.sleepScore ?? 0;
+    final activityScore = record?.activityScore ?? 0;
+    final waterScore = record?.waterScore ?? 0;
+
+    final image = await _screenshotController.captureFromLongWidget(
+      _buildPosterWidget(userName, score, label, sleepHours, activityType, activityDuration, waterIntake, sleepScore, activityScore, waterScore),
+      context: context,
+      pixelRatio: 3.0,
+    );
+
+    final tempDir = await getTemporaryDirectory();
+    final file = File('${tempDir.path}/medisync_share.png');
+    await file.writeAsBytes(image);
+
+    await Share.shareXFiles(
+      [XFile(file.path)],
+      text: 'Skor Kesehatanku Hari Ini: $score/100 ($label)',
+    );
+  }
+
+  Widget _buildPosterWidget(String userName, int score, String label, String sleepHours, String activityType, int activityDuration, int waterIntake, int sleepScore, int activityScore, int waterScore) {
+    final now = DateTime.now();
+    final days = ['Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu', 'Minggu'];
+    final months = ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Agu', 'Sep', 'Okt', 'Nov', 'Des'];
+    final dateStr = '${days[now.weekday - 1]}, ${now.day} ${months[now.month - 1]} ${now.year}';
+
+    return Container(
+      width: 225,
+      height: 400,
+      decoration: const BoxDecoration(
+        gradient: LinearGradient(
+          colors: [Color(0xFF1E5EFF), Color(0xFF0A1F44)],
+          begin: Alignment.topCenter,
+          end: Alignment.bottomCenter,
+        ),
+      ),
+      child: Stack(
+        children: [
+          Positioned(
+            top: -30,
+            right: -30,
+            child: Container(
+              width: 100,
+              height: 100,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                color: Colors.white.withValues(alpha: 0.05),
+              ),
+            ),
+          ),
+          Positioned(
+            bottom: 50,
+            left: -20,
+            child: Container(
+              width: 80,
+              height: 80,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                color: Colors.white.withValues(alpha: 0.05),
+              ),
+            ),
+          ),
+          Padding(
+            padding: const EdgeInsets.all(16),
+            child: Column(
+              children: [
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 5),
+                  decoration: BoxDecoration(
+                    color: Colors.white.withValues(alpha: 0.15),
+                    borderRadius: BorderRadius.circular(20),
+                  ),
+                  child: const Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(Icons.favorite, color: Colors.white, size: 10),
+                      SizedBox(width: 4),
+                      Text(
+                        'MediSync',
+                        style: TextStyle(
+                          fontSize: 10,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.white,
+                          letterSpacing: 1,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                const Spacer(),
+                Text(
+                  userName,
+                  style: const TextStyle(
+                    fontSize: 15,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.white,
+                  ),
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  dateStr,
+                  style: const TextStyle(
+                    fontSize: 9,
+                    color: Colors.white54,
+                  ),
+                ),
+                const Spacer(),
+                Container(
+                  width: 90,
+                  height: 90,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    color: Colors.white.withValues(alpha: 0.15),
+                    border: Border.all(color: Colors.white, width: 3),
+                  ),
+                  child: Center(
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Text(
+                          '$score',
+                          style: const TextStyle(
+                            fontSize: 28,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.white,
+                          ),
+                        ),
+                        Text(
+                          label.toUpperCase(),
+                          style: const TextStyle(
+                            fontSize: 7,
+                            fontWeight: FontWeight.w700,
+                            color: Colors.white70,
+                            letterSpacing: 1.5,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+                const Spacer(),
+                _buildPosterMetric(Icons.nightlight_round, 'Tidur', '$sleepHours jam', sleepScore, 40),
+                const SizedBox(height: 6),
+                _buildPosterMetric(Icons.fitness_center, 'Aktivitas', activityType, activityScore, 30),
+                const SizedBox(height: 6),
+                _buildPosterMetric(Icons.water_drop, 'Air', '$waterIntake/8 gelas', waterScore, 30),
+                const Spacer(),
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                  decoration: BoxDecoration(
+                    border: Border.all(color: Colors.white.withValues(alpha: 0.2)),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: const Text(
+                    '#MediSync #HealthyLifestyle',
+                    style: TextStyle(
+                      fontSize: 7,
+                      color: Colors.white38,
+                      letterSpacing: 0.5,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildPosterMetric(IconData icon, String label, String value, int score, int max) {
+    final percentage = max > 0 ? score / max : 0.0;
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+      decoration: BoxDecoration(
+        color: Colors.white.withValues(alpha: 0.1),
+        borderRadius: BorderRadius.circular(10),
+      ),
+      child: Row(
+        children: [
+          Icon(icon, color: Colors.white70, size: 12),
+          const SizedBox(width: 6),
+          SizedBox(
+            width: 45,
+            child: Text(
+              label,
+              style: const TextStyle(
+                fontSize: 9,
+                color: Colors.white70,
+              ),
+            ),
+          ),
+          Expanded(
+            child: ClipRRect(
+              borderRadius: BorderRadius.circular(2),
+              child: LinearProgressIndicator(
+                value: percentage,
+                minHeight: 4,
+                backgroundColor: Colors.white24,
+                valueColor: const AlwaysStoppedAnimation<Color>(Colors.white),
+              ),
+            ),
+          ),
+          const SizedBox(width: 6),
+          SizedBox(
+            width: 30,
+            child: Text(
+              value,
+              style: const TextStyle(
+                fontSize: 8,
+                color: Colors.white60,
+              ),
+              textAlign: TextAlign.right,
+            ),
           ),
         ],
       ),

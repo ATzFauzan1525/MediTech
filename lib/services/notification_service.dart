@@ -36,7 +36,26 @@ class NotificationService {
       const InitializationSettings initializationSettings =
           InitializationSettings(android: initializationSettingsAndroid);
 
-      await _localNotifications.initialize(initializationSettings);
+      await _localNotifications.initialize(
+        initializationSettings,
+        onDidReceiveNotificationResponse: (details) {},
+      );
+
+      const AndroidNotificationChannel dailyChannel = AndroidNotificationChannel(
+        'medisync_daily',
+        'Daily Health Reminder',
+        description: 'Pengingat harian untuk mengisi data kesehatan',
+        importance: Importance.high,
+        enableVibration: true,
+      );
+
+      final AndroidFlutterLocalNotificationsPlugin? androidImplementation =
+          _localNotifications.resolvePlatformSpecificImplementation<
+              AndroidFlutterLocalNotificationsPlugin>();
+
+      if (androidImplementation != null) {
+        await androidImplementation.createNotificationChannel(dailyChannel);
+      }
     } catch (_) {}
 
     try {

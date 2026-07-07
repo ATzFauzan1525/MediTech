@@ -543,22 +543,16 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
         }
       },
       child: Scaffold(
-        resizeToAvoidBottomInset: true,
         body: GestureDetector(
           behavior: HitTestBehavior.opaque,
           onTap: () => FocusScope.of(context).unfocus(),
-          child: SingleChildScrollView(
-            physics: const ClampingScrollPhysics(),
-            keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
-            padding: EdgeInsets.only(
-              bottom: MediaQuery.of(context).viewInsets.bottom + 24,
-            ),
+          child: SafeArea(
             child: Column(
               children: [
                 Container(
                   width: double.infinity,
-                  padding: EdgeInsets.only(
-                    top: MediaQuery.of(context).padding.top + 20,
+                  padding: const EdgeInsets.only(
+                    top: 20,
                     left: 24,
                     right: 24,
                     bottom: 40,
@@ -601,155 +595,164 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
                     ],
                   ),
                 ),
-                Padding(
-                  padding: const EdgeInsets.all(24),
-                  child: Form(
-                    key: _formKey,
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Container(
-                          padding: const EdgeInsets.all(20),
-                          decoration: BoxDecoration(
-                            color: AppColors.softBlue,
-                            borderRadius: BorderRadius.circular(20),
+                Expanded(
+                  child: SingleChildScrollView(
+                    physics: const ClampingScrollPhysics(),
+                    keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
+                    padding: EdgeInsets.only(
+                      left: 24,
+                      right: 24,
+                      top: 24,
+                      bottom: MediaQuery.of(context).viewInsets.bottom + 24,
+                    ),
+                    child: Form(
+                      key: _formKey,
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Container(
+                            padding: const EdgeInsets.all(20),
+                            decoration: BoxDecoration(
+                              color: AppColors.softBlue,
+                              borderRadius: BorderRadius.circular(20),
+                            ),
+                            child: const Icon(
+                              Icons.lock_reset_rounded,
+                              size: 60,
+                              color: AppColors.primaryBlue,
+                            ),
                           ),
-                          child: const Icon(
-                            Icons.lock_reset_rounded,
-                            size: 60,
-                            color: AppColors.primaryBlue,
+                          const SizedBox(height: 24),
+                          const Text(
+                            'Password Baru',
+                            style: TextStyle(
+                              fontSize: 18,
+                              fontWeight: FontWeight.w600,
+                              color: AppColors.black,
+                            ),
                           ),
-                        ),
-                        const SizedBox(height: 24),
-                        const Text(
-                          'Password Baru',
-                          style: TextStyle(
-                            fontSize: 18,
-                            fontWeight: FontWeight.w600,
-                            color: AppColors.black,
+                          const SizedBox(height: 8),
+                          Text(
+                            widget.isAuthenticatedMode
+                                ? 'Masukkan password lama dan password baru untuk memperbarui akun kamu.'
+                                : 'Pastikan password baru kamu kuat dan mudah diingat.',
+                            style: const TextStyle(fontSize: 14, color: AppColors.grey),
                           ),
-                        ),
-                        const SizedBox(height: 8),
-                        Text(
-                          widget.isAuthenticatedMode
-                              ? 'Masukkan password lama dan password baru untuk memperbarui akun kamu.'
-                              : 'Pastikan password baru kamu kuat dan mudah diingat.',
-                          style: const TextStyle(fontSize: 14, color: AppColors.grey),
-                        ),
-                        const SizedBox(height: 24),
-                        if (widget.isAuthenticatedMode)
+                          const SizedBox(height: 24),
+                          if (widget.isAuthenticatedMode)
+                            CustomTextField(
+                              label: 'Password Lama',
+                              hint: '••••••••',
+                              prefixIcon: Icons.lock_outline,
+                              controller: _currentPasswordController,
+                              obscureText: true,
+                              validator: (value) {
+                                if (value == null || value.isEmpty) {
+                                  return 'Password lama wajib diisi';
+                                }
+                                return null;
+                              },
+                            ),
+                          if (widget.isAuthenticatedMode) const SizedBox(height: 16),
                           CustomTextField(
-                            label: 'Password Lama',
+                            label: 'Password Baru',
                             hint: '••••••••',
                             prefixIcon: Icons.lock_outline,
-                            controller: _currentPasswordController,
-                            obscureText: true,
+                            controller: _passwordController,
+                            obscureText: _obscurePassword,
+                            suffixIcon: IconButton(
+                              icon: Icon(
+                                _obscurePassword
+                                    ? Icons.visibility_off_outlined
+                                    : Icons.visibility_outlined,
+                                color: AppColors.grey,
+                              ),
+                              onPressed: () {
+                                setState(() {
+                                  _obscurePassword = !_obscurePassword;
+                                });
+                              },
+                            ),
                             validator: (value) {
                               if (value == null || value.isEmpty) {
-                                return 'Password lama wajib diisi';
+                                return 'Password wajib diisi';
+                              }
+                              if (value.length < 6) {
+                                return 'Password minimal 6 karakter';
                               }
                               return null;
                             },
                           ),
-                        if (widget.isAuthenticatedMode) const SizedBox(height: 16),
-                        CustomTextField(
-                          label: 'Password Baru',
-                          hint: '••••••••',
-                          prefixIcon: Icons.lock_outline,
-                          controller: _passwordController,
-                          obscureText: _obscurePassword,
-                          suffixIcon: IconButton(
-                            icon: Icon(
-                              _obscurePassword
-                                  ? Icons.visibility_off_outlined
-                                  : Icons.visibility_outlined,
-                              color: AppColors.grey,
+                          const SizedBox(height: 16),
+                          CustomTextField(
+                            label: 'Konfirmasi Password',
+                            hint: '••••••••',
+                            prefixIcon: Icons.lock_outline,
+                            controller: _confirmPasswordController,
+                            obscureText: _obscureConfirm,
+                            suffixIcon: IconButton(
+                              icon: Icon(
+                                _obscureConfirm
+                                    ? Icons.visibility_off_outlined
+                                    : Icons.visibility_outlined,
+                                color: AppColors.grey,
+                              ),
+                              onPressed: () {
+                                setState(() {
+                                  _obscureConfirm = !_obscureConfirm;
+                                });
+                              },
                             ),
-                            onPressed: () {
-                              setState(() {
-                                _obscurePassword = !_obscurePassword;
-                              });
+                            validator: (value) {
+                              if (value == null || value.isEmpty) {
+                                return 'Konfirmasi password wajib diisi';
+                              }
+                              if (value != _passwordController.text) {
+                                return 'Password tidak cocok';
+                              }
+                              return null;
                             },
                           ),
-                          validator: (value) {
-                            if (value == null || value.isEmpty) {
-                              return 'Password wajib diisi';
-                            }
-                            if (value.length < 6) {
-                              return 'Password minimal 6 karakter';
-                            }
-                            return null;
-                          },
-                        ),
-                        const SizedBox(height: 16),
-                        CustomTextField(
-                          label: 'Konfirmasi Password',
-                          hint: '••••••••',
-                          prefixIcon: Icons.lock_outline,
-                          controller: _confirmPasswordController,
-                          obscureText: _obscureConfirm,
-                          suffixIcon: IconButton(
-                            icon: Icon(
-                              _obscureConfirm
-                                  ? Icons.visibility_off_outlined
-                                  : Icons.visibility_outlined,
-                              color: AppColors.grey,
+                          const SizedBox(height: 32),
+                          SizedBox(
+                            width: double.infinity,
+                            height: 48,
+                            child: ElevatedButton(
+                              onPressed: _isLoading ? null : _resetPassword,
+                              child: _isLoading
+                                  ? const SizedBox(
+                                      width: 24,
+                                      height: 24,
+                                      child: CircularProgressIndicator(
+                                        strokeWidth: 2,
+                                        color: AppColors.white,
+                                      ),
+                                    )
+                                  : const Text('Ubah Password'),
                             ),
-                            onPressed: () {
-                              setState(() {
-                                _obscureConfirm = !_obscureConfirm;
-                              });
-                            },
                           ),
-                          validator: (value) {
-                            if (value == null || value.isEmpty) {
-                              return 'Konfirmasi password wajib diisi';
-                            }
-                            if (value != _passwordController.text) {
-                              return 'Password tidak cocok';
-                            }
-                            return null;
-                          },
-                        ),
-                        const SizedBox(height: 32),
-                        SizedBox(
-                          width: double.infinity,
-                          height: 56,
-                          child: ElevatedButton(
-                            onPressed: _isLoading ? null : _resetPassword,
-                            child: _isLoading
-                                ? const SizedBox(
-                                    width: 24,
-                                    height: 24,
-                                    child: CircularProgressIndicator(
-                                      strokeWidth: 2,
-                                      color: AppColors.white,
-                                    ),
-                                  )
-                                : const Text('Ubah Password'),
-                          ),
-                        ),
-                        const SizedBox(height: 24),
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            Text(
-                              'Kembali ke ',
-                              style: const TextStyle(color: AppColors.grey),
-                            ),
-                            GestureDetector(
-                              onTap: _handleBackNavigation,
-                              child: Text(
-                                widget.isAuthenticatedMode ? 'Profil' : 'Login',
-                                style: const TextStyle(
-                                  color: AppColors.primaryBlue,
-                                  fontWeight: FontWeight.w600,
+                          const SizedBox(height: 24),
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Text(
+                                'Kembali ke ',
+                                style: const TextStyle(color: AppColors.grey),
+                              ),
+                              GestureDetector(
+                                onTap: _handleBackNavigation,
+                                child: Text(
+                                  widget.isAuthenticatedMode ? 'Profil' : 'Login',
+                                  style: const TextStyle(
+                                    color: AppColors.primaryBlue,
+                                    fontWeight: FontWeight.w600,
+                                  ),
                                 ),
                               ),
-                            ),
-                          ],
-                        ),
-                      ],
+                            ],
+                          ),
+                        ],
+                      ),
                     ),
                   ),
                 ),

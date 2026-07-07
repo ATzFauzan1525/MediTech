@@ -8,6 +8,7 @@ import 'firebase_options.dart';
 import 'providers/auth_provider.dart' as app;
 import 'providers/health_provider.dart';
 import 'providers/navigation_provider.dart';
+import 'services/notification_service.dart';
 import 'theme/app_theme.dart';
 import 'config/app_config.dart';
 import 'screens/splash_screen.dart';
@@ -41,6 +42,11 @@ void main() async {
       );
     }
   } catch (_) {}
+
+  try {
+    await NotificationService.initialize();
+  } catch (_) {}
+
   runApp(const MediSyncApp());
 }
 

@@ -51,6 +51,11 @@ class AuthProvider with ChangeNotifier {
         try {
           await _firestoreService.cleanupOldRecords(user.uid);
         } catch (_) {}
+        try {
+          if (_notificationEnabled) {
+            await NotificationService.scheduleDailyReminder();
+          }
+        } catch (_) {}
       } else {
         _userModel = null;
       }

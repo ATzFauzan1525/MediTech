@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:fl_chart/fl_chart.dart';
-import 'package:intl/intl.dart';
 import '../models/health_record_model.dart';
 import '../providers/health_provider.dart';
 import '../theme/app_theme.dart';
@@ -15,6 +14,13 @@ class HistoryScreen extends StatelessWidget {
       body: Consumer<HealthProvider>(
         builder: (context, health, _) {
           final records = health.records;
+          final now = DateTime.now();
+          final weekday = now.weekday;
+          final startOfWeek = DateTime(now.year, now.month, now.day - (weekday - 1));
+          final endOfWeek = startOfWeek.add(const Duration(days: 6));
+
+          final months = ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Agu', 'Sep', 'Okt', 'Nov', 'Des'];
+          final dateRange = '${startOfWeek.day} ${months[startOfWeek.month - 1]} - ${endOfWeek.day} ${months[endOfWeek.month - 1]} ${endOfWeek.year}';
 
           return CustomScrollView(
             slivers: [
@@ -42,7 +48,7 @@ class HistoryScreen extends StatelessWidget {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       const Text(
-                        'Riwayat',
+                        'Riwayat Minggu Ini',
                         style: TextStyle(
                           fontSize: 24,
                           fontWeight: FontWeight.bold,
@@ -51,7 +57,7 @@ class HistoryScreen extends StatelessWidget {
                       ),
                       const SizedBox(height: 4),
                       Text(
-                        '7 Hari Terakhir',
+                        dateRange,
                         style: TextStyle(
                           fontSize: 14,
                           color: AppColors.white.withValues(alpha: 0.7),
@@ -67,7 +73,7 @@ class HistoryScreen extends StatelessWidget {
                   delegate: SliverChildListDelegate([
                     _buildChartCard(records),
                     const SizedBox(height: 20),
-                    _buildStatsRow(health),
+                    _buildStatsRow(records),
                     const SizedBox(height: 24),
                     const Text(
                       'Insight Minggu Ini',
@@ -98,6 +104,38 @@ class HistoryScreen extends StatelessWidget {
   }
 
   Widget _buildChartCard(List records) {
+    final now = DateTime.now();
+    final today = DateTime(now.year, now.month, now.day);
+    final weekday = now.weekday;
+    final startOfWeek = today.subtract(Duration(days: weekday - 1));
+
+    final weekDays = List.generate(7, (i) {
+      final date = startOfWeek.add(Duration(days: i));
+      final dayNames = ['Sen', 'Sel', 'Rab', 'Kam', 'Jum', 'Sab', 'Min'];
+      return {
+        'date': date,
+        'label': dayNames[i],
+      };
+    });
+
+    final weekRecords = weekDays.map((day) {
+      final date = day['date'] as DateTime;
+      HealthRecord? record;
+      for (final r in records) {
+        if (r.date.year == date.year &&
+            r.date.month == date.month &&
+            r.date.day == date.day) {
+          record = r;
+          break;
+        }
+      }
+      return {
+        'label': day['label'],
+        'score': record?.totalScore ?? 0,
+        'hasData': record != null,
+      };
+    }).toList();
+
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
@@ -125,112 +163,145 @@ class HistoryScreen extends StatelessWidget {
           const SizedBox(height: 20),
           SizedBox(
             height: 180,
-            child: records.isEmpty
-                ? const Center(
-                    child: Text(
-                      'Belum ada data',
-                      style: TextStyle(color: AppColors.grey),
-                    ),
-                  )
-                : BarChart(
-                    BarChartData(
-                      alignment: BarChartAlignment.spaceAround,
-                      maxY: 100,
-                      barTouchData: BarTouchData(
-                        touchTooltipData: BarTouchTooltipData(
-                          getTooltipItem: (group, groupIndex, rod, rodIndex) {
-                            return BarTooltipItem(
-                              '${rod.toY.toInt()}',
-                              const TextStyle(
-                                color: AppColors.white,
-                                fontWeight: FontWeight.bold,
+            child: BarChart(
+              BarChartData(
+                alignment: BarChartAlignment.spaceAround,
+                maxY: 100,
+                barTouchData: BarTouchData(
+                  touchTooltipData: BarTouchTooltipData(
+                    getTooltipItem: (group, groupIndex, rod, rodIndex) {
+                      final dayData = weekRecords[group.x.toInt()];
+                      return BarTooltipItem(
+                        '${dayData['score']}',
+                        const TextStyle(
+                          color: AppColors.white,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      );
+                    },
+                  ),
+                ),
+                titlesData: FlTitlesData(
+                  show: true,
+                  bottomTitles: AxisTitles(
+                    sideTitles: SideTitles(
+                      showTitles: true,
+                      getTitlesWidget: (value, meta) {
+                        final index = value.toInt();
+                        if (index < weekRecords.length) {
+                          final isToday = index == weekday - 1;
+                          return Padding(
+                            padding: const EdgeInsets.only(top: 8),
+                            child: Text(
+                              weekRecords[index]['label'] as String,
+                              style: TextStyle(
+                                fontSize: 11,
+                                fontWeight: isToday ? FontWeight.bold : FontWeight.normal,
+                                color: isToday ? AppColors.primaryBlue : AppColors.grey,
                               ),
-                            );
-                          },
-                        ),
-                      ),
-                      titlesData: FlTitlesData(
-                        show: true,
-                        bottomTitles: AxisTitles(
-                          sideTitles: SideTitles(
-                            showTitles: true,
-                            getTitlesWidget: (value, meta) {
-                              final index = value.toInt();
-                              if (index < records.length) {
-                                final date = records[index].date;
-                                return Padding(
-                                  padding: const EdgeInsets.only(top: 8),
-                                  child: Text(
-                                    DateFormat('EEE').format(date),
-                                    style: const TextStyle(
-                                      fontSize: 11,
-                                      color: AppColors.grey,
-                                    ),
-                                  ),
-                                );
-                              }
-                              return const Text('');
-                            },
-                          ),
-                        ),
-                        leftTitles: const AxisTitles(
-                          sideTitles: SideTitles(showTitles: false),
-                        ),
-                        topTitles: const AxisTitles(
-                          sideTitles: SideTitles(showTitles: false),
-                        ),
-                        rightTitles: const AxisTitles(
-                          sideTitles: SideTitles(showTitles: false),
-                        ),
-                      ),
-                      borderData: FlBorderData(show: false),
-                      gridData: const FlGridData(show: false),
-                      barGroups: List.generate(
-                        records.length > 7 ? 7 : records.length,
-                        (index) {
-                          final record = records[index];
-                          return BarChartGroupData(
-                            x: index,
-                            barRods: [
-                              BarChartRodData(
-                                toY: record.totalScore.toDouble(),
-                                color: _getScoreColor(record.totalScore),
-                                width: 18,
-                                borderRadius: const BorderRadius.only(
-                                  topLeft: Radius.circular(6),
-                                  topRight: Radius.circular(6),
-                                ),
-                              ),
-                            ],
+                            ),
                           );
-                        },
-                      ),
+                        }
+                        return const Text('');
+                      },
                     ),
                   ),
+                  leftTitles: const AxisTitles(
+                    sideTitles: SideTitles(showTitles: false),
+                  ),
+                  topTitles: const AxisTitles(
+                    sideTitles: SideTitles(showTitles: false),
+                  ),
+                  rightTitles: const AxisTitles(
+                    sideTitles: SideTitles(showTitles: false),
+                  ),
+                ),
+                borderData: FlBorderData(show: false),
+                gridData: const FlGridData(show: false),
+                barGroups: List.generate(
+                  7,
+                  (index) {
+                    final score = weekRecords[index]['score'] as int;
+                    return BarChartGroupData(
+                      x: index,
+                      barRods: [
+                        BarChartRodData(
+                          toY: score.toDouble(),
+                          color: score > 0
+                              ? _getScoreColor(score)
+                              : AppColors.lightGrey,
+                          width: 18,
+                          borderRadius: const BorderRadius.only(
+                            topLeft: Radius.circular(6),
+                            topRight: Radius.circular(6),
+                          ),
+                        ),
+                      ],
+                    );
+                  },
+                ),
+              ),
+            ),
           ),
         ],
       ),
     );
   }
 
-  Widget _buildStatsRow(HealthProvider health) {
+  Widget _buildStatsRow(List records) {
+    final now = DateTime.now();
+    final weekday = now.weekday;
+    final startOfWeek = DateTime(now.year, now.month, now.day - (weekday - 1));
+    final endOfWeek = startOfWeek.add(const Duration(days: 6));
+
+    final weekRecords = records.where((r) {
+      final date = r.date;
+      return date.isAfter(startOfWeek.subtract(const Duration(days: 1))) &&
+          date.isBefore(endOfWeek.add(const Duration(days: 1)));
+    }).toList();
+
+    int totalScore = 0;
+    for (final HealthRecord r in weekRecords) {
+      totalScore += r.totalScore;
+    }
+    final avgScore = weekRecords.isNotEmpty ? totalScore / weekRecords.length : 0.0;
+
+    final highestScore = weekRecords.isNotEmpty
+        ? weekRecords.map((r) => r.totalScore).reduce((a, b) => a > b ? a : b)
+        : 0;
+
+    int streak = 0;
+    final today = DateTime(now.year, now.month, now.day);
+    for (int i = 0; i < 7; i++) {
+      final checkDate = today.subtract(Duration(days: i));
+      final hasRecord = weekRecords.any((r) =>
+          r.date.year == checkDate.year &&
+          r.date.month == checkDate.month &&
+          r.date.day == checkDate.day);
+      if (hasRecord) {
+        streak++;
+      } else {
+        break;
+      }
+    }
+
     return Row(
       children: [
         _buildStatCard(
           'Rata-rata',
-          health.averageScore.toStringAsFixed(0),
+          avgScore.toStringAsFixed(0),
           AppColors.primaryBlue,
         ),
         const SizedBox(width: 12),
         _buildStatCard(
           'Terbaik',
-          '${health.highestScore}',
+          '$highestScore',
           AppColors.success,
         ),
         const SizedBox(width: 12),
         _buildStatCard(
           'Streak',
-          '${health.currentStreak}',
+          '$streak',
           AppColors.warning,
         ),
       ],
@@ -271,26 +342,35 @@ class HistoryScreen extends StatelessWidget {
 
   Widget _buildInsightCard(List records) {
     final insights = <String>[];
+    final now = DateTime.now();
+    final weekday = now.weekday;
+    final startOfWeek = DateTime(now.year, now.month, now.day - (weekday - 1));
+    final endOfWeek = startOfWeek.add(const Duration(days: 6));
 
-    if (records.isEmpty) {
-      insights.add('Mulai input data harian untuk mendapat insight.');
+    final weekRecords = records.where((r) {
+      final date = r.date;
+      return date.isAfter(startOfWeek.subtract(const Duration(days: 1))) &&
+          date.isBefore(endOfWeek.add(const Duration(days: 1)));
+    }).toList();
+
+    if (weekRecords.isEmpty) {
+      insights.add('Belum ada data minggu ini. Mulai input data harian.');
     } else {
-      final recent = records.take(7).toList();
-      final sleepAvg = recent
+      final sleepAvg = weekRecords
               .map((r) => (r as HealthRecord).sleepHours)
               .fold(0.0, (a, b) => a + b) /
-          recent.length;
-      final activityDays = recent
+          weekRecords.length;
+      final activityDays = weekRecords
           .where((r) => (r as HealthRecord).activityType != 'No Activity' && (r).activityDuration >= 30)
           .length;
-      final waterAvg = recent
+      final waterAvg = weekRecords
               .map((r) => (r as HealthRecord).waterIntake)
               .fold(0, (a, b) => a + b) /
-          recent.length;
-      final averageScore = recent
+          weekRecords.length;
+      final averageScore = weekRecords
               .map((r) => (r as HealthRecord).totalScore)
               .fold(0, (a, b) => a + b) /
-          recent.length;
+          weekRecords.length;
 
       if (sleepAvg < 7) {
         insights.add('Rata-rata tidurmu ${sleepAvg.toStringAsFixed(1)} jam, masih di bawah target 7–9 jam.');
@@ -301,9 +381,9 @@ class HistoryScreen extends StatelessWidget {
       }
 
       if (activityDays >= 4) {
-        insights.add('Aktivitas fisikmu cukup konsisten di $activityDays dari ${recent.length} hari terakhir.');
+        insights.add('Aktivitas fisikmu cukup konsisten di $activityDays dari ${weekRecords.length} hari minggu ini.');
       } else {
-        insights.add('Aktivitas fisikmu belum konsisten, baru $activityDays dari ${recent.length} hari terakhir.');
+        insights.add('Aktivitas fisikmu belum konsisten, baru $activityDays dari ${weekRecords.length} hari minggu ini.');
       }
 
       if (waterAvg >= 8) {
@@ -315,13 +395,13 @@ class HistoryScreen extends StatelessWidget {
       }
 
       if (averageScore >= 80) {
-        insights.add('Skor rata-ratamu ${averageScore.toStringAsFixed(0)}, sangat sehat.');
+        insights.add('Skor rata-ratamu ${averageScore.toStringAsFixed(0)}, sangat sehat minggu ini.');
       } else if (averageScore >= 60) {
-        insights.add('Skor rata-ratamu ${averageScore.toStringAsFixed(0)}, cukup sehat.');
+        insights.add('Skor rata-ratamu ${averageScore.toStringAsFixed(0)}, cukup sehat minggu ini.');
       } else if (averageScore >= 40) {
-        insights.add('Skor rata-ratamu ${averageScore.toStringAsFixed(0)}, butuh perhatian lebih.');
+        insights.add('Skor rata-ratamu ${averageScore.toStringAsFixed(0)}, butuh perhatian lebih minggu ini.');
       } else {
-        insights.add('Skor rata-ratamu ${averageScore.toStringAsFixed(0)}, perlu perbaikan segera.');
+        insights.add('Skor rata-ratamu ${averageScore.toStringAsFixed(0)}, perlu perbaikan segera minggu ini.');
       }
     }
 

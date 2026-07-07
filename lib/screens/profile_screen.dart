@@ -137,6 +137,29 @@ class _ProfileScreenState extends State<ProfileScreen> {
                             return null;
                           },
                         ),
+                        const SizedBox(height: 16),
+                        SizedBox(
+                          width: double.infinity,
+                          child: OutlinedButton.icon(
+                            onPressed: () {
+                              Navigator.pop(dialogContext);
+                              Navigator.pushNamed(
+                                context,
+                                AppRoutes.changePassword,
+                                arguments: {'isAuthenticatedMode': true},
+                              );
+                            },
+                            icon: const Icon(Icons.lock_outline, size: 18),
+                            label: const Text('Ubah Password'),
+                            style: OutlinedButton.styleFrom(
+                              foregroundColor: AppColors.primaryBlue,
+                              side: const BorderSide(color: AppColors.primaryBlue),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                            ),
+                          ),
+                        ),
                       ],
                     ),
                   ),
@@ -357,16 +380,16 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       const SizedBox(height: 24),
                       SizedBox(
                         width: double.infinity,
-                        height: 56,
+                        height: 48,
                         child: OutlinedButton.icon(
                           onPressed: () => _showEditProfileDialog(context, auth),
                           icon: const Icon(Icons.edit_outlined, size: 20),
                           label: const Text('Edit Profil'),
                           style: OutlinedButton.styleFrom(
                             foregroundColor: AppColors.primaryBlue,
-                            side: const BorderSide(color: AppColors.primaryBlue, width: 2),
+                            side: const BorderSide(color: AppColors.primaryBlue),
                             shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(16),
+                              borderRadius: BorderRadius.circular(12),
                             ),
                           ),
                         ),
@@ -374,30 +397,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       const SizedBox(height: 12),
                       SizedBox(
                         width: double.infinity,
-                        height: 56,
-                        child: OutlinedButton.icon(
-                          onPressed: () {
-                            Navigator.pushNamed(
-                              context,
-                              AppRoutes.changePassword,
-                              arguments: {'isAuthenticatedMode': true},
-                            );
-                          },
-                          icon: const Icon(Icons.lock_outline, size: 20),
-                          label: const Text('Ubah Password'),
-                          style: OutlinedButton.styleFrom(
-                            foregroundColor: AppColors.primaryBlue,
-                            side: const BorderSide(color: AppColors.primaryBlue, width: 2),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(16),
-                            ),
-                          ),
-                        ),
-                      ),
-                      const SizedBox(height: 12),
-                      SizedBox(
-                        width: double.infinity,
-                        height: 56,
+                        height: 48,
                         child: OutlinedButton.icon(
                           onPressed: () {
                             _showLogoutDialog(context, auth);
@@ -406,9 +406,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
                           label: const Text('Keluar'),
                           style: OutlinedButton.styleFrom(
                             foregroundColor: AppColors.danger,
-                            side: const BorderSide(color: AppColors.danger, width: 2),
+                            side: const BorderSide(color: AppColors.danger),
                             shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(16),
+                              borderRadius: BorderRadius.circular(12),
                             ),
                           ),
                         ),

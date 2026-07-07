@@ -18,6 +18,7 @@ class _DailyInputScreenState extends State<DailyInputScreen> {
   String _activityType = 'No Activity';
   int _activityDuration = 30;
   int _waterIntake = 0;
+  bool _isSaving = false;
 
   @override
   void initState() {
@@ -131,6 +132,8 @@ class _DailyInputScreenState extends State<DailyInputScreen> {
       return;
     }
 
+    setState(() => _isSaving = true);
+
     final record = healthProvider.calculateRecord(
       userId: user.uid,
       date: DateTime.now(),
@@ -144,6 +147,10 @@ class _DailyInputScreenState extends State<DailyInputScreen> {
 
     final success = await healthProvider.saveHealthRecord(record);
 
+    if (mounted) {
+      setState(() => _isSaving = false);
+    }
+
     if (success && mounted) {
       await healthProvider.loadRecords(user.uid);
       if (!mounted) return;
@@ -156,6 +163,7 @@ class _DailyInputScreenState extends State<DailyInputScreen> {
     return Scaffold(
       resizeToAvoidBottomInset: false,
       body: SingleChildScrollView(
+        physics: const ClampingScrollPhysics(),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -350,69 +358,56 @@ class _DailyInputScreenState extends State<DailyInputScreen> {
                     ),
                     child: Column(
                       children: [
-                        LayoutBuilder(
-                          builder: (context, constraints) {
-                            final iconSize = constraints.maxWidth < 360 ? 22.0 : 28.0;
-                            final spacing = constraints.maxWidth < 360 ? 2.0 : 3.0;
-
-                            return Row(
-                              children: [
-                                IconButton(
-                                  onPressed: () {
-                                    setState(() {
-                                      if (_waterIntake > 0 && _waterIntake <= 3) {
-                                        _waterIntake = 0;
-                                      } else if (_waterIntake > 3) {
-                                        _waterIntake = 3;
-                                      }
-                                    });
-                                  },
-                                  icon: Icon(
-                                    Icons.remove_circle_outline,
-                                    size: iconSize + 2,
-                                  ),
-                                  color: AppColors.primaryBlue,
-                                  padding: EdgeInsets.zero,
-                                  constraints: const BoxConstraints(),
-                                ),
-                                const SizedBox(width: 8),
-                                Expanded(
-                                  child: Wrap(
-                                    alignment: WrapAlignment.center,
-                                    runSpacing: 4,
-                                    children: List.generate(8, (index) {
-                                      final isFilled = index < _waterIntake;
-                                      return Padding(
-                                        padding: EdgeInsets.symmetric(horizontal: spacing),
-                                        child: Icon(
-                                          Icons.local_drink,
-                                          size: iconSize,
-                                          color: isFilled
-                                              ? AppColors.primaryBlue
-                                              : AppColors.lightGrey,
-                                        ),
-                                      );
-                                    }),
-                                  ),
-                                ),
-                                const SizedBox(width: 8),
-                                IconButton(
-                                  onPressed: () {
-                                    setState(() {
-                                      if (_waterIntake < 8) _waterIntake++;
-                                    });
-                                  },
-                                  icon: Icon(
-                                    Icons.add_circle_outline,
-                                    size: iconSize + 2,
-                                  ),
-                                  color: AppColors.primaryBlue,
-                                  padding: EdgeInsets.zero,
-                                  constraints: const BoxConstraints(),
-                                ),
-                              ],
-                            );
-                          },
+                        Row(
+                          children: [
+                            IconButton(
+                              onPressed: () {
+                                setState(() {
+                                  if (_waterIntake > 0 && _waterIntake <= 3) {
+                                    _waterIntake = 0;
+                                  } else if (_waterIntake > 3) {
+                                    _waterIntake = 3;
+                                  }
+                                });
+                              },
+                              icon: const Icon(Icons.remove_circle_outline, size: 30),
+                              color: AppColors.primaryBlue,
+                              padding: EdgeInsets.zero,
+                              constraints: const BoxConstraints(),
+                            ),
+                            const SizedBox(width: 8),
+                            Expanded(
+                              child: Wrap(
+                                alignment: WrapAlignment.center,
+                                runSpacing: 4,
+                                children: List.generate(8, (index) {
+                                  final isFilled = index < _waterIntake;
+                                  return Padding(
+                                    padding: const EdgeInsets.symmetric(horizontal: 3),
+                                    child: Icon(
+                                      Icons.local_drink,
+                                      size: 28,
+                                      color: isFilled
+                                          ? AppColors.primaryBlue
+                                          : AppColors.lightGrey,
+                                    ),
+                                  );
+                                }),
+                              ),
+                            ),
+                            const SizedBox(width: 8),
+                            IconButton(
+                              onPressed: () {
+                                setState(() {
+                                  if (_waterIntake < 8) _waterIntake++;
+                                });
+                              },
+                              icon: const Icon(Icons.add_circle_outline, size: 30),
+                              color: AppColors.primaryBlue,
+                              padding: EdgeInsets.zero,
+                              constraints: const BoxConstraints(),
+                            ),
+                          ],
                         ),
                         const SizedBox(height: 8),
                         Text(
@@ -438,103 +433,71 @@ class _DailyInputScreenState extends State<DailyInputScreen> {
   }
 
   Widget _buildHeader() {
-    return Consumer<HealthProvider>(
-      builder: (context, health, _) {
-        final now = DateTime.now();
-        final days = ['Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu', 'Minggu'];
-        final months = ['Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni', 'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'];
-        final dateStr = '${days[now.weekday - 1]}, ${now.day} ${months[now.month - 1]} ${now.year}';
+    final now = DateTime.now();
+    final days = ['Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu', 'Minggu'];
+    final months = ['Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni', 'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'];
+    final dateStr = '${days[now.weekday - 1]}, ${now.day} ${months[now.month - 1]} ${now.year}';
 
-        return Container(
-          width: double.infinity,
-          padding: EdgeInsets.only(
-            top: MediaQuery.of(context).padding.top + 20,
-            left: 24,
-            right: 24,
-            bottom: 24,
-          ),
-          decoration: const BoxDecoration(
-            gradient: LinearGradient(
-              colors: [AppColors.primaryBlue, AppColors.darkBlue],
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
+    return Container(
+      width: double.infinity,
+      padding: EdgeInsets.only(
+        top: MediaQuery.of(context).padding.top + 20,
+        left: 24,
+        right: 24,
+        bottom: 24,
+      ),
+      decoration: const BoxDecoration(
+        gradient: LinearGradient(
+          colors: [AppColors.primaryBlue, AppColors.darkBlue],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+        borderRadius: BorderRadius.only(
+          bottomLeft: Radius.circular(30),
+          bottomRight: Radius.circular(30),
+        ),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Text(
+            'Input Harian',
+            style: TextStyle(
+              fontSize: 24,
+              fontWeight: FontWeight.bold,
+              color: AppColors.white,
             ),
-            borderRadius: BorderRadius.only(
-              bottomLeft: Radius.circular(30),
-              bottomRight: Radius.circular(30),
+          ),
+          const SizedBox(height: 4),
+          Text(
+            dateStr,
+            style: TextStyle(
+              fontSize: 14,
+              color: AppColors.white.withValues(alpha: 0.8),
             ),
           ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  IconButton(
-                    onPressed: () => Navigator.pop(context),
-                    icon: const Icon(Icons.arrow_back_ios, color: AppColors.white),
-                  ),
-                  if (health.todayRecord != null)
-                    Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                      decoration: BoxDecoration(
-                        color: const Color(0x33FFFFFF),
-                        borderRadius: BorderRadius.circular(20),
-                      ),
-                      child: Text(
-                        'Terakhir diperbarui ${_formatUpdatedAt(health.todayRecord?.createdAt)}',
-                        style: const TextStyle(fontSize: 12, color: AppColors.white),
-                      ),
-                    ),
-                ],
-              ),
-              const SizedBox(height: 8),
-              const Text(
-                'Input Harian',
-                style: TextStyle(
-                  fontSize: 24,
-                  fontWeight: FontWeight.bold,
-                  color: AppColors.white,
-                ),
-              ),
-              const SizedBox(height: 4),
-              Text(
-                dateStr,
-                style: TextStyle(
-                  fontSize: 14,
-                  color: AppColors.white.withValues(alpha: 0.8),
-                ),
-              ),
-            ],
-          ),
-        );
-      },
+        ],
+      ),
     );
   }
 
   Widget _buildSubmitButton() {
-    return Consumer<HealthProvider>(
-      builder: (context, health, _) {
-        return SizedBox(
-          width: double.infinity,
-          height: 56,
-          child: ElevatedButton(
-            onPressed: health.isLoading
-                ? null
-                : (health.canSubmitInput() ? _saveRecord : null),
-            child: health.isLoading
-                ? const SizedBox(
-                    width: 24,
-                    height: 24,
-                    child: CircularProgressIndicator(
-                      strokeWidth: 2,
-                      color: AppColors.white,
-                    ),
-                  )
-                : const Text('Hitung Skor'),
-          ),
-        );
-      },
+    return SizedBox(
+      width: double.infinity,
+      height: 48,
+      child: ElevatedButton(
+        onPressed: _isSaving ? null : _saveRecord,
+        child: _isSaving
+            ? const SizedBox(
+                width: 24,
+                height: 24,
+                child: CircularProgressIndicator(
+                  strokeWidth: 2,
+                  color: AppColors.white,
+                ),
+              )
+            : const Text('Hitung Skor'),
+      ),
     );
   }
 
@@ -553,16 +516,6 @@ class _DailyInputScreenState extends State<DailyInputScreen> {
         ),
       ],
     );
-  }
-
-  String _formatUpdatedAt(DateTime? updatedAt) {
-    if (updatedAt == null) return 'baru saja';
-    final now = DateTime.now();
-    final difference = now.difference(updatedAt);
-    if (difference.inMinutes < 1) return 'baru saja';
-    if (difference.inHours < 1) return '${difference.inMinutes} menit lalu';
-    if (difference.inHours < 24) return '${difference.inHours} jam lalu';
-    return '${difference.inDays} hari lalu';
   }
 
   String _formatDuration(int minutes) {

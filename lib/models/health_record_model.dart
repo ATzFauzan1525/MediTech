@@ -108,14 +108,13 @@ class HealthRecord {
   }
 
   static int calculateActivityScore(String type, int duration) {
-    if (duration < 30) return 0;
     switch (type) {
       case 'Heavy Exercise':
-        return 30;
+        return duration >= 30 ? 30 : 20;
       case 'Light Exercise':
-        return 20;
+        return duration >= 30 ? 25 : 15;
       case 'Walking':
-        return 10;
+        return duration >= 30 ? 20 : 10;
       default:
         return 0;
     }
@@ -123,8 +122,13 @@ class HealthRecord {
 
   static int calculateWaterScore(int glasses) {
     if (glasses >= 8) return 30;
-    if (glasses >= 6 && glasses <= 7) return 20;
-    if (glasses >= 4 && glasses <= 5) return 10;
+    if (glasses == 7) return 26;
+    if (glasses == 6) return 22;
+    if (glasses == 5) return 18;
+    if (glasses == 4) return 14;
+    if (glasses == 3) return 10;
+    if (glasses == 2) return 6;
+    if (glasses == 1) return 3;
     return 0;
   }
 

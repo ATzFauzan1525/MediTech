@@ -15,27 +15,27 @@ class Onboarding1Screen extends StatelessWidget {
             const SizedBox(height: 16),
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 24),
-              child: Align(
-                alignment: Alignment.centerLeft,
-                child: IconButton(
-                  onPressed: () {
-                    Navigator.pushNamedAndRemoveUntil(
-                      context,
-                      AppRoutes.welcome,
-                      (route) => false,
-                    );
-                  },
-                  icon: const Icon(Icons.arrow_back_ios, color: AppColors.black),
-                ),
-              ),
-            ),
-            const SizedBox(height: 8),
-            const Text(
-              'Langkah 1 dari 2',
-              style: TextStyle(
-                fontSize: 14,
-                fontWeight: FontWeight.w600,
-                color: AppColors.primaryBlue,
+              child: Row(
+                children: [
+                  IconButton(
+                    onPressed: () {
+                      Navigator.pushNamedAndRemoveUntil(
+                        context,
+                        AppRoutes.welcome,
+                        (route) => false,
+                      );
+                    },
+                    icon: const Icon(Icons.arrow_back_ios, color: AppColors.black),
+                  ),
+                  const Text(
+                    'Langkah 1 dari 2',
+                    style: TextStyle(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w600,
+                      color: AppColors.primaryBlue,
+                    ),
+                  ),
+                ],
               ),
             ),
             const SizedBox(height: 40),
@@ -106,7 +106,7 @@ class Onboarding1Screen extends StatelessWidget {
               padding: const EdgeInsets.symmetric(horizontal: 32),
               child: SizedBox(
                 width: double.infinity,
-                height: 56,
+                height: 48,
                 child: ElevatedButton(
                   onPressed: () {
                     Navigator.pushNamed(context, AppRoutes.onboarding2);
@@ -115,7 +115,7 @@ class Onboarding1Screen extends StatelessWidget {
                     backgroundColor: AppColors.primaryBlue,
                     foregroundColor: AppColors.white,
                     shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(16),
+                      borderRadius: BorderRadius.circular(12),
                     ),
                   ),
                   child: const Row(
@@ -124,12 +124,12 @@ class Onboarding1Screen extends StatelessWidget {
                       Text(
                         'Berikutnya',
                         style: TextStyle(
-                          fontSize: 16,
+                          fontSize: 15,
                           fontWeight: FontWeight.w600,
                         ),
                       ),
                       SizedBox(width: 8),
-                      Icon(Icons.arrow_forward_ios, size: 18),
+                      Icon(Icons.arrow_forward_ios, size: 16),
                     ],
                   ),
                 ),
