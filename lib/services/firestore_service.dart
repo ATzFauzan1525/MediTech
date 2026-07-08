@@ -85,14 +85,14 @@ class FirestoreService {
         ? record.id
         : buildDailyRecordDocId(record.userId, record.date);
 
+    await _local.saveHealthRecord(record);
+
     try {
       await _firestore
           .collection(FirebaseConfig.healthRecordsCollection)
           .doc(docId)
           .set(record.toMap(), SetOptions(merge: true));
-    } catch (_) {
-      await _local.saveHealthRecord(record);
-    }
+    } catch (_) {}
   }
 
   Future<List<HealthRecord>> getHealthRecords(String uid,

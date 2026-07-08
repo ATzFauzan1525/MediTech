@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import '../providers/navigation_provider.dart';
 import '../providers/auth_provider.dart';
 import '../providers/health_provider.dart';
+import '../services/notification_service.dart';
 import '../widgets/bottom_nav.dart';
 import 'dashboard_screen.dart';
 import 'daily_input_screen.dart';
@@ -43,6 +44,7 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
     _authProvider.addListener(_handleAuthChanged);
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _loadHealthDataIfNeeded();
+      NotificationService.checkAndShowNotification();
     });
   }
 

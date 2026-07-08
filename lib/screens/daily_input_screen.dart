@@ -19,12 +19,12 @@ class _DailyInputScreenState extends State<DailyInputScreen> {
   int _activityDuration = 30;
   int _waterIntake = 0;
   bool _isSaving = false;
+  bool _hasSynced = false;
 
   @override
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      _syncValuesFromProvider();
       final auth = context.read<AuthProvider>();
       final uid = auth.user?.uid;
       if (uid != null) {
@@ -36,7 +36,27 @@ class _DailyInputScreenState extends State<DailyInputScreen> {
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
-    _syncValuesFromProvider();
+    final todayRecord = context.watch<HealthProvider>().todayRecord;
+    if (todayRecord != null && !_hasSynced) {
+      final today = DateTime.now();
+      final sameDay =
+          todayRecord.date.year == today.year &&
+          todayRecord.date.month == today.month &&
+          todayRecord.date.day == today.day;
+      if (sameDay) {
+        final sleepStart = _parseTimeOfDay(todayRecord.sleepStartTime);
+        final sleepEnd = _parseTimeOfDay(todayRecord.sleepEndTime);
+
+        setState(() {
+          _sleepStart = sleepStart ?? _sleepStart;
+          _sleepEnd = sleepEnd ?? _sleepEnd;
+          _activityType = todayRecord.activityType;
+          _activityDuration = todayRecord.activityDuration;
+          _waterIntake = todayRecord.waterIntake;
+          _hasSynced = true;
+        });
+      }
+    }
   }
 
   static const List<Map<String, dynamic>> _activities = [
@@ -56,32 +76,6 @@ class _DailyInputScreenState extends State<DailyInputScreen> {
       totalMinutes = (24 * 60 - startMinutes) + endMinutes;
     }
     return totalMinutes / 60.0;
-  }
-
-  void _syncValuesFromProvider() {
-    final healthProvider = context.read<HealthProvider>();
-    final todayRecord = healthProvider.todayRecord;
-    if (todayRecord == null) return;
-
-    final today = DateTime.now();
-    final sameDay =
-        todayRecord.date.year == today.year &&
-        todayRecord.date.month == today.month &&
-        todayRecord.date.day == today.day;
-    if (!sameDay) return;
-
-    final sleepStart = _parseTimeOfDay(todayRecord.sleepStartTime);
-    final sleepEnd = _parseTimeOfDay(todayRecord.sleepEndTime);
-
-    if (mounted) {
-      setState(() {
-        _sleepStart = sleepStart ?? _sleepStart;
-        _sleepEnd = sleepEnd ?? _sleepEnd;
-        _activityType = todayRecord.activityType;
-        _activityDuration = todayRecord.activityDuration;
-        _waterIntake = todayRecord.waterIntake;
-      });
-    }
   }
 
   TimeOfDay? _parseTimeOfDay(String value) {

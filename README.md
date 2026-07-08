@@ -18,7 +18,7 @@ MediSync adalah aplikasi mobile yang membantu pengguna memantau dan mengevaluasi
 - **Riwayat** - Chart dan statistik 7 hari terakhir
 - **Profil** - Pengelolaan data profil
 - **Ubah Password** - Ganti password dari profil
-- **Notifikasi** - Pengingat harian jam 22:00
+- **Notifikasi** - Pengingat harian jam 22:00 (muncul saat buka app setelah jam 22:00)
 - **Share** - Membagikan poster kesehatan (9:16)
 
 ---
@@ -79,7 +79,8 @@ lib/
 │   ├── auth_service.dart        # Firebase Auth
 │   ├── firestore_service.dart   # Firestore CRUD
 │   ├── local_storage_service.dart # SharedPreferences
-│   └── notification_service.dart # Local notifications
+│   ├── notification_service.dart # Local notifications
+│   └── timezone_helper.dart     # Timezone helper
 ├── theme/
 │   └── app_theme.dart           # Tema dan warna
 ├── widgets/

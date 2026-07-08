@@ -17,46 +17,6 @@ class HealthProvider with ChangeNotifier {
   bool get isLoading => _isLoading;
   String? get error => _error;
 
-  int get todayScore => _todayRecord?.totalScore ?? 0;
-  String get todayLabel => _todayRecord?.healthLabel ?? 'No Data';
-
-  double get averageScore {
-    if (_records.isEmpty) return 0;
-    final total = _records.fold<int>(0, (sum, r) => sum + r.totalScore);
-    return total / _records.length;
-  }
-
-  int get highestScore {
-    if (_records.isEmpty) return 0;
-    return _records.map((r) => r.totalScore).reduce((a, b) => a > b ? a : b);
-  }
-
-  int get currentStreak {
-    if (_records.isEmpty) return 0;
-    int streak = 0;
-    DateTime today = DateTime.now();
-    for (int i = 0; i < _records.length; i++) {
-      final recordDate = DateTime(
-        _records[i].date.year,
-        _records[i].date.month,
-        _records[i].date.day,
-      );
-      final expectedDate = DateTime(today.year, today.month, today.day - i);
-      if (recordDate == expectedDate) {
-        streak++;
-      } else {
-        break;
-      }
-    }
-    return streak;
-  }
-
-  // ===================== INPUT RULES =====================
-
-  bool canSubmitInput() => true;
-
-  int get inputCooldown => 0;
-
   bool isTodayRecordLocked(DateTime date) {
     return FirestoreService.isRecordLocked(date);
   }

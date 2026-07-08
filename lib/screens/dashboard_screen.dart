@@ -7,6 +7,7 @@ import 'dart:io';
 import '../providers/auth_provider.dart';
 import '../providers/health_provider.dart';
 import '../models/health_record_model.dart';
+import '../services/notification_service.dart';
 import '../theme/app_theme.dart';
 import '../widgets/suggestion_card.dart';
 
@@ -39,6 +40,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _loadHealthDataIfNeeded();
+      NotificationService.checkAndShowNotification();
     });
   }
 

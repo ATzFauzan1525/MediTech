@@ -177,8 +177,9 @@ MediSync adalah aplikasi mobile standalone yang menggunakan Firebase sebagai bac
 
 #### 3.7.1 Daily Reminder
 - **Waktu:** 22:00 setiap hari
-- **Proses:** zonedSchedule dengan matchDateTimeComponents
+- **Proses:** Notifikasi muncul saat user buka app setelah jam 22:00 (fallback untuk device dengan aggressive battery optimization seperti Xiaomi/MIUI)
 - **Output:** Notifikasi "Jangan lupa catat data kesehatanmu hari ini."
+- **Catatan:** Untuk notifikasi tepat waktu di background, user perlu matikan battery optimization untuk MediSync
 
 ---
 
@@ -224,8 +225,6 @@ MediSync adalah aplikasi mobile standalone yang menggunakan Firebase sebagai bac
 |----------------------|----------------------|
 | Firebase Auth        | Autentikasi pengguna |
 | Cloud Firestore      | Database NoSQL       |
-| Firebase Messaging   | Push notification    |
-| Firebase Crashlytics | Crash reporting      |
 
 ### 5.3 Dependencies
 | Package                     | Versi   | Fungsi              |
@@ -243,7 +242,7 @@ MediSync adalah aplikasi mobile standalone yang menggunakan Firebase sebagai bac
 | screenshot                  | ^3.0.0  | Capture widget      |
 | path_provider               | ^2.1.5  | File system         |
 | shared_preferences          | ^2.3.4  | Local storage       |
-| app_links                   | ^6.1.3  | Deep links          |
+| app_links                   | ^6.4.1  | Deep links          |
 
 ### 5.4 Struktur Database
 

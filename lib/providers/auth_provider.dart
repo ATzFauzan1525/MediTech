@@ -13,22 +13,15 @@ class AuthProvider with ChangeNotifier {
   UserModel? _userModel;
   bool _isLoading = false;
   String? _error;
-  bool _initialized = false;
 
   // Notification state
   bool _notificationEnabled = true;
-
-  // Email verification state
-  String? _verificationEmail;
 
   User? get user => _user;
   UserModel? get userModel => _userModel;
   bool get isLoading => _isLoading;
   String? get error => _error;
-  bool get isAuthenticated => _user != null;
-  bool get initialized => _initialized;
   bool get notificationEnabled => _notificationEnabled;
-  String? get verificationEmail => _verificationEmail;
 
   AuthProvider() {
     _init();
@@ -38,6 +31,12 @@ class AuthProvider with ChangeNotifier {
     try {
       _notificationEnabled = await NotificationService.isNotificationEnabled();
     } catch (_) {}
+
+    if (_notificationEnabled) {
+      try {
+        await NotificationService.scheduleDailyReminder();
+      } catch (_) {}
+    }
 
     _authService.authStateChanges.listen((User? user) async {
       _user = user;
@@ -59,7 +58,6 @@ class AuthProvider with ChangeNotifier {
       } else {
         _userModel = null;
       }
-      _initialized = true;
       notifyListeners();
     });
   }
@@ -128,7 +126,6 @@ class AuthProvider with ChangeNotifier {
           await _firestoreService.createUser(newUser);
         } catch (_) {}
         _userModel = newUser;
-        _verificationEmail = email;
         await _authService.saveLoginSession(firebaseUser.uid);
       }
       _isLoading = false;
