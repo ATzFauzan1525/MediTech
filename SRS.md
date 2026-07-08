@@ -2,7 +2,7 @@
 ## MediSync - Health Lifestyle Monitoring Application
 
 **Versi:** 1.0  
-**Tanggal:** 7 Juli 2025  
+**Tanggal:** 9 Juli 2026  
 **Status:** Final
 
 ---
@@ -19,7 +19,7 @@ Aplikasi ini menyediakan fitur:
 - Perhitungan skor kesehatan
 - Riwayat dan visualisasi data 7 hari
 - Rekomendasi kesehatan berbasis data
-- Notifikasi pengingat harian
+- Notifikasi via Firebase Cloud Messaging (FCM)
 - Fitur share poster kesehatan
 
 ### 1.3 Definisi, Istilah, dan Singkatan
@@ -29,6 +29,7 @@ Aplikasi ini menyediakan fitur:
 | Sleep Score    | Skor berdasarkan durasi tidur (0-40)                        |
 | Activity Score | Skor berdasarkan jenis dan durasi aktivitas (0-30)          |
 | Water Score    | Skor berdasarkan konsumsi air (0-30)                        |
+| FCM            | Firebase Cloud Messaging untuk notifikasi push               |
 | OobCode        | One-time code untuk reset password via email                |
 
 ---
@@ -45,7 +46,7 @@ MediSync adalah aplikasi mobile standalone yang menggunakan Firebase sebagai bac
 4. **Dashboard** - Menampilkan skor hari ini
 5. **Riwayat** - Chart dan statistik 7 hari terakhir
 6. **Profil** - Pengelolaan data profil
-7. **Notifikasi** - Pengingat harian jam 22:00
+7. **Notifikasi** - Pengingat harian via FCM dari Firebase Console
 8. **Share** - Membagikan poster kesehatan
 
 ### 2.2.1 Karakteristik Pengguna
@@ -56,6 +57,7 @@ MediSync adalah aplikasi mobile standalone yang menggunakan Firebase sebagai bac
 ### 2.2.2 Kendala Operasional
 - Memerlukan koneksi internet untuk sinkronisasi data
 - Notifikasi memerlukan izin dari pengguna
+- Di Xiaomi/MIUI, notifikasi background memerlukan pengaturan battery optimization
 
 ### 2.2.3 Asumsi dan Ketergantungan
 - Pengguna memiliki device Android/iOS
@@ -170,16 +172,19 @@ MediSync adalah aplikasi mobile standalone yang menggunakan Firebase sebagai bac
 
 #### 3.6.3 Toggle Notifikasi
 - **Input:** Switch notifikasi
-- **Proses:** Update preference di SharedPreferences dan Firestore
+- **Proses:** Update preference di SharedPreferences
 - **Output:** Notifikasi aktif/nonaktif
 
 ### 3.7 Notifikasi
 
-#### 3.7.1 Daily Reminder
-- **Waktu:** 22:00 setiap hari
-- **Proses:** Notifikasi muncul saat user buka app setelah jam 22:00 (fallback untuk device dengan aggressive battery optimization seperti Xiaomi/MIUI)
-- **Output:** Notifikasi "Jangan lupa catat data kesehatanmu hari ini."
-- **Catatan:** Untuk notifikasi tepat waktu di background, user perlu matikan battery optimization untuk MediSync
+#### 3.7.1 Daily Reminder via FCM
+- **Waktu:** Dikirim dari Firebase Console (jadwal 22:00)
+- **Proses:** Notifikasi push via Firebase Cloud Messaging
+- **Output:** Notifikasi "Jangan lupa catat data kesehatanmu hari ini"
+- **Catatan:** 
+  - Saat app dibuka setelah jam 22:00, notifikasi akan ditampilkan
+  - Untuk notifikasi tepat waktu di background, kirim dari Firebase Console
+  - Di Xiaomi/MIUI, user perlu matikan battery optimization untuk background notification
 
 ---
 
@@ -225,19 +230,19 @@ MediSync adalah aplikasi mobile standalone yang menggunakan Firebase sebagai bac
 |----------------------|----------------------|
 | Firebase Auth        | Autentikasi pengguna |
 | Cloud Firestore      | Database NoSQL       |
+| Firebase Cloud Messaging | Notifikasi push   |
 
 ### 5.3 Dependencies
 | Package                     | Versi   | Fungsi              |
 |-----------------------------|---------|---------------------|
 | firebase_core               | ^3.12.1 | Core Firebase       |
 | firebase_auth               | ^5.5.4  | Authentication      |
+| firebase_messaging          | ^15.2.9 | Cloud Messaging     |
 | cloud_firestore             | ^5.6.9  | Database            |
 | google_sign_in              | ^6.2.2  | Google OAuth        |
 | provider                    | ^6.1.2  | State management    |  
 | fl_chart                    | ^0.70.2 | Charts              |
 | share_plus                  | ^10.1.4 | Share content       |
-| flutter_local_notifications | ^18.0.1 | Local notifications |
-| timezone                    | ^0.10.0 | Timezone handling   |
 | google_fonts                | ^6.2.1  | Typography          |
 | screenshot                  | ^3.0.0  | Capture widget      |
 | path_provider               | ^2.1.5  | File system         |
@@ -366,13 +371,13 @@ MediSync adalah aplikasi mobile standalone yang menggunakan Firebase sebagai bac
 - [ ] Perhitungan skor benar
 - [ ] Riwayat tampil 7 hari
 - [ ] Share poster berhasil
-- [ ] Notifikasi muncul jam 22:00
+- [ ] Notifikasi FCM diterima
 
 ### 7.2 Pengujian Non-Fungsional
 - [ ] Aplikasi tidak lag
 - [ ] Data tersimpan offline
 - [ ] Auto-sync saat online
-- [ ] Notifikasi berfungsi di background
+- [ ] Notifikasi berfungsi
 
 ---
 

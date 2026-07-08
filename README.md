@@ -18,7 +18,7 @@ MediSync adalah aplikasi mobile yang membantu pengguna memantau dan mengevaluasi
 - **Riwayat** - Chart dan statistik 7 hari terakhir
 - **Profil** - Pengelolaan data profil
 - **Ubah Password** - Ganti password dari profil
-- **Notifikasi** - Pengingat harian jam 22:00 (muncul saat buka app setelah jam 22:00)
+- **Notifikasi** - Pengingat harian via Firebase Cloud Messaging (FCM)
 - **Share** - Membagikan poster kesehatan (9:16)
 
 ---
@@ -34,7 +34,7 @@ MediSync adalah aplikasi mobile yang membantu pengguna memantau dan mengevaluasi
 | Autentikasi      | Firebase Auth               |
 | State Management | Provider                    |
 | Charts           | fl_chart                    |
-| Notifications    | flutter_local_notifications |
+| Notifications    | Firebase Cloud Messaging    |
 
 ---
 
@@ -79,8 +79,7 @@ lib/
 │   ├── auth_service.dart        # Firebase Auth
 │   ├── firestore_service.dart   # Firestore CRUD
 │   ├── local_storage_service.dart # SharedPreferences
-│   ├── notification_service.dart # Local notifications
-│   └── timezone_helper.dart     # Timezone helper
+│   └── notification_service.dart # Firebase Cloud Messaging
 ├── theme/
 │   └── app_theme.dart           # Tema dan warna
 ├── widgets/
@@ -195,8 +194,6 @@ service cloud.firestore {
 ### Android Permissions
 ```xml
 <uses-permission android:name="android.permission.POST_NOTIFICATIONS"/>
-<uses-permission android:name="android.permission.SCHEDULE_EXACT_ALARM"/>
-<uses-permission android:name="android.permission.USE_EXACT_ALARM"/>
 ```
 
 ---
@@ -248,7 +245,7 @@ Sebagai **Mobile Developer**, saya bertanggung jawab atas:
 - Integrasi Firebase Auth dan Firestore
 - Implementasi state management dengan Provider
 - Pembuatan chart dengan fl_chart
-- Implementasi notifikasi lokal
+- Implementasi notifikasi via Firebase Cloud Messaging
 - Fitur share poster kesehatan
 - Optimasi performa aplikasi
 
