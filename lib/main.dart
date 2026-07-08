@@ -3,7 +3,6 @@ import 'package:flutter/services.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:provider/provider.dart';
 import 'package:app_links/app_links.dart';
-import 'package:workmanager/workmanager.dart';
 import 'dart:async';
 import 'firebase_options.dart';
 import 'providers/auth_provider.dart' as app;
@@ -29,19 +28,6 @@ import 'services/email_action_link_handler.dart';
 
 final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
 
-@pragma('vm:entry-point')
-void callbackDispatcher() {
-  Workmanager().executeTask((taskName, inputData) async {
-    if (taskName == 'dailyReminderTask') {
-      try {
-        await NotificationService.initialize();
-        await NotificationService.showDailyReminder();
-      } catch (_) {}
-    }
-    return Future.value(true);
-  });
-}
-
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   SystemChrome.setPreferredOrientations([DeviceOrientation.portraitUp]);
@@ -59,15 +45,6 @@ void main() async {
 
   try {
     await NotificationService.initialize();
-    await Workmanager().initialize(callbackDispatcher);
-    await Workmanager().registerPeriodicTask(
-      'dailyReminderTask',
-      'dailyReminderTask',
-      frequency: const Duration(hours: 24),
-      initialDelay: const Duration(minutes: 1),
-      existingWorkPolicy: ExistingPeriodicWorkPolicy.replace,
-      constraints: Constraints(networkType: NetworkType.connected),
-    );
   } catch (_) {}
 
   runApp(const MediSyncApp());
@@ -80,20 +57,29 @@ class MediSyncApp extends StatefulWidget {
   State<MediSyncApp> createState() => _MediSyncAppState();
 }
 
-class _MediSyncAppState extends State<MediSyncApp> {
+class _MediSyncAppState extends State<MediSyncApp> with WidgetsBindingObserver {
   late final AppLinks _appLinks;
   StreamSubscription<Uri>? _linkSubscription;
 
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
     _initDeepLinks();
   }
 
   @override
   void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
     _linkSubscription?.cancel();
     super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed) {
+      NotificationService.checkAndShowNotification();
+    }
   }
 
   Future<void> _initDeepLinks() async {

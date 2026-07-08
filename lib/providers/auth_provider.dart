@@ -32,12 +32,6 @@ class AuthProvider with ChangeNotifier {
       _notificationEnabled = await NotificationService.isNotificationEnabled();
     } catch (_) {}
 
-    if (_notificationEnabled) {
-      try {
-        await NotificationService.scheduleDailyReminder();
-      } catch (_) {}
-    }
-
     _authService.authStateChanges.listen((User? user) async {
       _user = user;
       if (user != null) {
@@ -49,11 +43,6 @@ class AuthProvider with ChangeNotifier {
         } catch (_) {}
         try {
           await _firestoreService.cleanupOldRecords(user.uid);
-        } catch (_) {}
-        try {
-          if (_notificationEnabled) {
-            await NotificationService.scheduleDailyReminder();
-          }
         } catch (_) {}
       } else {
         _userModel = null;
